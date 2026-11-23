@@ -285,20 +285,24 @@
           <p class="text-xs text-slate-500">Track event date, venue, event time, advance set-up date & time, and logistical arrangements.</p>
         </div>
 
-        <form id="addEventForm" onsubmit="handleAddEvent(event)" class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
+        <form id="addEventForm" onsubmit="handleAddEvent(event)" class="mt-4 grid grid-cols-1 sm:grid-cols-6 lg:grid-cols-12 gap-4 items-start">
+          <div class="sm:col-span-3 lg:col-span-3">
             <label class="block text-xs font-semibold text-slate-700 mb-1">Date of Event *</label>
             <input type="date" id="ev_date" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
           </div>
-          <div>
+          <div class="sm:col-span-3 lg:col-span-3">
             <label class="block text-xs font-semibold text-slate-700 mb-1">Name of Event *</label>
             <input type="text" id="ev_name" required placeholder="e.g., Monthly Staff General Assembly" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
           </div>
-          <div>
+          <div class="sm:col-span-3 lg:col-span-3">
             <label class="block text-xs font-semibold text-slate-700 mb-1">Place / Venue *</label>
             <input type="text" id="ev_place" required placeholder="e.g., Main Conference Hall" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
           </div>
-          <div class="sm:col-span-2 lg:col-span-2">
+          <div class="sm:col-span-3 lg:col-span-3">
+            <label class="block text-xs font-semibold text-indigo-700 mb-1">Set-up Date *</label>
+            <input type="date" id="ev_setup_date" required class="w-full rounded-lg border border-indigo-300 bg-indigo-50/40 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div class="sm:col-span-6 lg:col-span-6">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <label class="block text-xs font-semibold text-slate-700">Time of Event *</label>
               <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700">
@@ -307,14 +311,14 @@
               </label>
             </div>
             <div id="ev_event_period_fields" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-              <fieldset class="rounded-lg border border-slate-200 p-3">
+              <fieldset class="h-full rounded-lg border border-slate-200 p-3">
                 <legend class="px-1 text-xs font-semibold text-slate-700">Morning</legend>
                 <div class="grid grid-cols-2 gap-2">
                   <label class="text-xs text-slate-600">From<input type="time" id="ev_event_morning_from" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm" /></label>
                   <label class="text-xs text-slate-600">To<input type="time" id="ev_event_morning_to" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm" /></label>
                 </div>
               </fieldset>
-              <fieldset class="rounded-lg border border-slate-200 p-3">
+              <fieldset class="h-full rounded-lg border border-slate-200 p-3">
                 <legend class="px-1 text-xs font-semibold text-slate-700">Afternoon</legend>
                 <div class="grid grid-cols-2 gap-2">
                   <label class="text-xs text-slate-600">From<input type="time" id="ev_event_afternoon_from" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm" /></label>
@@ -323,7 +327,7 @@
               </fieldset>
             </div>
             <div id="ev_event_whole_day_fields" class="hidden mt-2 max-w-md">
-              <fieldset class="rounded-lg border border-slate-200 p-3">
+              <fieldset class="h-full rounded-lg border border-slate-200 p-3">
                 <legend class="px-1 text-xs font-semibold text-slate-700">Whole-day time range</legend>
                 <div class="grid grid-cols-2 gap-3">
                   <label class="text-xs text-slate-600">From<input type="time" id="ev_event_day_from" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm" /></label>
@@ -333,21 +337,17 @@
             </div>
             <p class="mt-1 text-[11px] text-slate-500">Enter a from/to range for the morning, afternoon, or both. For a whole-day event, enter its start and end times.</p>
           </div>
-          <div>
-            <label class="block text-xs font-semibold text-indigo-700 mb-1">Set-up Date *</label>
-            <input type="date" id="ev_setup_date" required class="w-full rounded-lg border border-indigo-300 bg-indigo-50/40 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          </div>
-          <div class="sm:col-span-2 lg:col-span-2">
+          <div class="sm:col-span-6 lg:col-span-6">
             <label class="block text-xs font-semibold text-indigo-700 mb-1">Set-up Time *</label>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <fieldset class="rounded-lg border border-indigo-200 bg-indigo-50/30 p-3">
+              <fieldset class="h-full rounded-lg border border-indigo-200 bg-indigo-50/30 p-3">
                 <legend class="px-1 text-xs font-semibold text-indigo-700">Morning</legend>
                 <div class="grid grid-cols-2 gap-2">
                   <label class="text-xs text-slate-600">From<input type="time" id="ev_setup_morning_from" class="mt-1 w-full rounded-lg border border-indigo-300 px-2 py-2 text-sm" /></label>
                   <label class="text-xs text-slate-600">To<input type="time" id="ev_setup_morning_to" class="mt-1 w-full rounded-lg border border-indigo-300 px-2 py-2 text-sm" /></label>
                 </div>
               </fieldset>
-              <fieldset class="rounded-lg border border-indigo-200 bg-indigo-50/30 p-3">
+              <fieldset class="h-full rounded-lg border border-indigo-200 bg-indigo-50/30 p-3">
                 <legend class="px-1 text-xs font-semibold text-indigo-700">Afternoon</legend>
                 <div class="grid grid-cols-2 gap-2">
                   <label class="text-xs text-slate-600">From<input type="time" id="ev_setup_afternoon_from" class="mt-1 w-full rounded-lg border border-indigo-300 px-2 py-2 text-sm" /></label>
@@ -357,11 +357,11 @@
             </div>
             <p class="mt-1 text-[11px] text-slate-500">Enter a from/to range for the morning, afternoon, or both.</p>
           </div>
-          <div class="sm:col-span-2">
+          <div class="sm:col-span-6 lg:col-span-12">
             <label class="block text-xs font-semibold text-slate-700 mb-1">Arrangements (Chairs, Sound System, Projector, Catering, etc.)</label>
-            <textarea id="ev_arrangements" rows="1" placeholder="e.g., 60 monoblock chairs, 2 wireless mics, projector, bottled water" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]"></textarea>
+            <textarea id="ev_arrangements" rows="2" placeholder="e.g., 60 monoblock chairs, 2 wireless mics, projector, bottled water" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]"></textarea>
           </div>
-          <div class="sm:col-span-2 lg:col-span-4 flex justify-end">
+          <div class="sm:col-span-6 lg:col-span-12 flex justify-end">
             <button type="submit" class="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold py-2 px-5 rounded-lg text-sm transition shadow-sm cursor-pointer">
               + Schedule Event
             </button>
