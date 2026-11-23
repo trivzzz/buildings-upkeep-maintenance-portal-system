@@ -1,0 +1,28 @@
+body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    /* Custom scrollbar for wide data tables */
+    .table-scroll::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    .table-scroll::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 6px;
+    }
+    .table-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 6px;
+    }
+    .table-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeSlideIn 0.2s ease-out forwards;
+    }

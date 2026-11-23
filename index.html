@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buildings Upkeep Maintenance Portal</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="bumd.css" />
+  <script src="bumd-config.js"></script>
+
+  
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- ==================== TOP ADMINISTRATIVE HEADER ==================== -->
+  <header class="bg-[#1e3a8a] text-white shadow-lg border-b border-blue-900">
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex flex-col lg:flex-row lg:items-start gap-4">
+        <!-- Brand & Title -->
+        <div class="flex items-start sm:items-center gap-3.5 pr-36 sm:pr-44">
+          <img src="bumd-logo.jpg" alt="Buildings Upkeep Maintenance Department logo" class="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-full bg-white border-2 border-white/80 shadow-md shrink-0" />
+          <div>
+            <div class="flex flex-wrap items-center gap-2.5">
+              <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Buildings Upkeep Maintenance Portal</h1>
+              <span id="syncStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-200 border border-amber-400/30">
+                <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span id="syncStatusText">Connecting...</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Global Toolbar Actions -->
+        <div class="absolute right-4 sm:right-6 lg:right-8 top-1/2 -translate-y-1/2 flex flex-wrap items-center gap-2">
+          <button onclick="exportAllCSV()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white text-[#1e3a8a] hover:bg-blue-50 transition shadow-sm cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export All CSV
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== LIVE KPI SUMMARY CARDS ==================== -->
+  <section class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- KPI 1: Supplies -->
+      <div onclick="switchTab('supplies')" class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:border-blue-400 transition cursor-pointer">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Supplies Inventory</span>
+          <span class="p-2 rounded-lg bg-blue-50 text-[#2563eb]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="kpiSupplyCount" class="text-2xl font-extrabold text-slate-900">0</span>
+          <span class="text-xs font-medium text-slate-500">items tracked</span>
+        </div>
+        <div class="mt-2 flex items-center gap-2 text-xs">
+          <span id="kpiLowStockBadge" class="px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800">0 Low Stock</span>
+          <span id="kpiTotalUnits" class="text-slate-500">0 total units left</span>
+        </div>
+      </div>
+
+      <!-- KPI 2: Events -->
+      <div onclick="switchTab('events')" class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:border-blue-400 transition cursor-pointer">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Event Monitoring</span>
+          <span class="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="kpiUpcomingEvents" class="text-2xl font-extrabold text-slate-900">0</span>
+          <span class="text-xs font-medium text-slate-500">upcoming events</span>
+        </div>
+        <div class="mt-2 text-xs text-slate-500 truncate" id="kpiNextEventText">No upcoming events scheduled</div>
+      </div>
+
+      <!-- KPI 3: Checklists -->
+      <div onclick="switchTab('checklists')" class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:border-blue-400 transition cursor-pointer">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Checklist Monitoring</span>
+          <span class="p-2 rounded-lg bg-amber-50 text-amber-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="kpiPendingChecklists" class="text-2xl font-extrabold text-slate-900">0</span>
+          <span class="text-xs font-medium text-slate-500">pending doc checks</span>
+        </div>
+        <div class="mt-2 flex items-center gap-2 text-xs">
+          <span id="kpiVerifiedChecklists" class="px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800">0 Verified</span>
+          <span class="text-slate-500">Restroom, Room & Inv.</span>
+        </div>
+      </div>
+
+      <!-- KPI 4: JSA DTR -->
+      <div onclick="switchTab('dtr')" class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:border-blue-400 transition cursor-pointer">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">JSA DTR Monitoring</span>
+          <span class="p-2 rounded-lg bg-emerald-50 text-emerald-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="kpiDtrHours" class="text-2xl font-extrabold text-slate-900">0.00</span>
+          <span class="text-xs font-medium text-slate-500">total JSA hours</span>
+        </div>
+        <div class="mt-2 flex items-center gap-2 text-xs">
+          <span id="kpiJsaStaffCount" class="px-2 py-0.5 rounded-full font-semibold bg-blue-100 text-blue-800">0 Co-Workers</span>
+          <span id="kpiAbsentFormsCount" class="text-slate-500">0 absent forms</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MAIN WORKSPACE CONTENT ==================== -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1">
+
+    <!-- ============================================================ -->
+    <!-- MODULE 1: SUPPLIES INVENTORY TRACKING SYSTEM (100+ ITEMS)    -->
+    <!-- ============================================================ -->
+    <div id="module-supplies" class="module-panel space-y-6 animate-fade-in">
+      <!-- Add Supply Form Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-bold text-[#1e3a8a]">Add New Supply Item</h2>
+            <p class="text-xs text-slate-500">Supports 100+ office items with automatic Credit (+Added) and Debit (-Used) balance tracking.</p>
+          </div>
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+            <span class="text-slate-500 font-medium">Calculated Total Left:</span>
+            <span id="supplyFormPreviewTotal" class="font-extrabold text-sm text-[#2563eb]">0</span>
+          </div>
+        </div>
+
+        <form id="addSupplyForm" onsubmit="handleAddSupply(event)" class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Date *</label>
+            <input type="date" id="sup_entry_date" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Name of Supply *</label>
+            <textarea id="sup_name" required rows="3" placeholder="Enter one description per line&#10;e.g., Bond Paper A4 (Ream)&#10;Black Ballpen (Box of 12)" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]"></textarea>
+            <p class="mt-1 text-[11px] text-slate-500">Separate multiple descriptions with a new line or comma.</p>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Date Received</label>
+            <input type="date" id="sup_date_received" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Type of Supply *</label>
+            <select id="sup_type" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#2563eb]">
+              <option value="">Select category</option>
+              <option value="Office Supplies">Office Supplies</option>
+              <option value="Equipment">Equipment</option>
+              <option value="Cleaning Supplies">Cleaning Supplies</option>
+              <option value="Harmful Chemicals">Harmful Chemicals</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Previous / Beginning Total *</label>
+            <input type="number" id="sup_prev_total" value="0" min="0" required oninput="updateSupplyFormPreview()" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-emerald-700 mb-1">Credit (+ Added Since Last) *</label>
+            <input type="number" id="sup_credit" value="0" min="0" required oninput="updateSupplyFormPreview()" class="w-full rounded-lg border border-emerald-300 bg-emerald-50/40 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-rose-700 mb-1">Debit (- Used / Left Count) *</label>
+            <input type="number" id="sup_debit" value="0" min="0" required oninput="updateSupplyFormPreview()" class="w-full rounded-lg border border-rose-300 bg-rose-50/40 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500" />
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold py-2 px-4 rounded-lg text-sm transition shadow-sm cursor-pointer">
+              + Add Supply Item
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Supplies Inventory Table Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-bold text-[#1e3a8a]">Supplies Inventory Master List</h2>
+            <p class="text-xs text-slate-500" id="suppliesShowingInfo">Showing 0 items</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Instant Search -->
+            <div class="relative flex-1 sm:flex-initial">
+              <input type="text" id="supplySearchInput" oninput="resetSupplyPageAndRender()" placeholder="Search supply name or type..." class="w-full sm:w-60 rounded-lg border border-slate-300 pl-8 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+              <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <!-- Category Filter -->
+            <select id="supplyCategoryFilter" onchange="resetSupplyPageAndRender()" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#2563eb]">
+              <option value="ALL">All Supply Types</option>
+              <option value="Office Supplies">Office Supplies</option>
+              <option value="Equipment">Equipment</option>
+              <option value="Cleaning Supplies">Cleaning Supplies</option>
+              <option value="Harmful Chemicals">Harmful Chemicals</option>
+            </select>
+            <!-- Low Stock Toggle -->
+            <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50/70 text-amber-900 text-xs font-semibold cursor-pointer select-none">
+              <input type="checkbox" id="supplyLowStockOnly" onchange="resetSupplyPageAndRender()" class="rounded text-amber-600 focus:ring-amber-500" />
+              <span>Low Stock Only (≤ 5)</span>
+            </label>
+            <!-- Export CSV -->
+            <button onclick="exportSuppliesCSV()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="mt-4 overflow-x-auto table-scroll rounded-lg border border-slate-200">
+          <table class="min-w-full divide-y divide-slate-200 text-sm">
+            <thead class="bg-slate-50 text-slate-700 text-xs uppercase font-bold">
+              <tr>
+                <th class="px-3.5 py-3 text-left whitespace-nowrap">Date</th>
+                <th class="px-3.5 py-3 text-left">Name of Supply</th>
+                <th class="px-3.5 py-3 text-left whitespace-nowrap">Date Received</th>
+                <th class="px-3.5 py-3 text-left whitespace-nowrap">Type of Supply</th>
+                <th class="px-3.5 py-3 text-right whitespace-nowrap">Prev. Total</th>
+                <th class="px-3.5 py-3 text-right whitespace-nowrap text-emerald-700">Credit (+Added)</th>
+                <th class="px-3.5 py-3 text-right whitespace-nowrap text-rose-700">Debit (-Used)</th>
+                <th class="px-3.5 py-3 text-center whitespace-nowrap">Total Left</th>
+                <th class="px-3.5 py-3 text-right whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="suppliesTableBody" class="divide-y divide-slate-200 bg-white">
+              <tr><td colspan="9" class="px-4 py-8 text-center text-slate-400">Loading supplies inventory...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Controls (for 100+ items) -->
+        <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-slate-600">
+          <div class="flex items-center gap-2">
+            <span>Rows per page:</span>
+            <select id="supplyPageSize" onchange="resetSupplyPageAndRender()" class="rounded border border-slate-300 px-2 py-1 bg-white">
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100" selected>100</option>
+              <option value="500">All (500)</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="supplyPrevPageBtn" onclick="changeSupplyPage(-1)" class="px-3 py-1 rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 cursor-pointer">Previous</button>
+            <span id="supplyPageIndicator" class="font-semibold">Page 1 of 1</span>
+            <button id="supplyNextPageBtn" onclick="changeSupplyPage(1)" class="px-3 py-1 rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 cursor-pointer">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 2: EVENT MONITORING SYSTEM                            -->
+    <!-- ============================================================ -->
+    <div id="module-events" class="module-panel hidden space-y-6 animate-fade-in">
+      <!-- Schedule Event Form Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-6">
+        <div class="pb-4 border-b border-slate-100">
+          <h2 class="text-lg font-bold text-[#1e3a8a]">Schedule New Office Event</h2>
+          <p class="text-xs text-slate-500">Track event date, venue, event time, advance set-up date & time, and logistical arrangements.</p>
+        </div>
+
+        <form id="addEventForm" onsubmit="handleAddEvent(event)" class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Date of Event *</label>
+            <input type="date" id="ev_date" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Name of Event *</label>
+            <input type="text" id="ev_name" required placeholder="e.g., Monthly Staff General Assembly" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Place / Venue *</label>
+            <input type="text" id="ev_place" required placeholder="e.g., Main Conference Hall" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+          </div>
+          <div class="sm:col-span-2 lg:col-span-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <label class="block text-xs font-semibold text-slate-700">Time of Event *</label>
+              <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700">
+                <input type="checkbox" id="ev_event_whole_day" onchange="toggleWholeDayEventTimes('ev')" class="rounded text-[#2563eb]" />
+                Whole Day
+              </label>
+            </div>
+            <div id="ev_event_period_fields" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+              <fieldset class="rounded-lg border border-slate-200 p-3">
+                <legend class="px-1 text-xs font-semibold text-slate-700">Morning</legend>
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="text-xs text-slate-600">From<input type="time" id="ev_event_morning_from" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm" /></label>
+                  <label class="text-xs text-slate-600">To<input type="time" id="ev_event_morning_to" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm" /></label>
+                </div>
+              </fieldset>
+              <fieldset class="rounded-lg border border-slate-200 p-3">
+                <legend class="px-1 text-xs font-semibold text-slate-700">Afternoon</legend>
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="text-xs text-slate-600">From<input type="time" id="ev_event_afternoon_from" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm" /></label>
+                  <label class="text-xs text-slate-600">To<input type="time" id="ev_event_afternoon_to" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm" /></label>
+                </div>
+              </fieldset>
+            </div>
+            <div id="ev_event_whole_day_fields" class="hidden mt-2 max-w-md">
+              <fieldset class="rounded-lg border border-slate-200 p-3">
+                <legend class="px-1 text-xs font-semibold text-slate-700">Whole-day time range</legend>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="text-xs text-slate-600">From<input type="time" id="ev_event_day_from" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm" /></label>
+                  <label class="text-xs text-slate-600">To<input type="time" id="ev_event_day_to" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm" /></label>
+                </div>
+              </fieldset>
+            </div>
+            <p class="mt-1 text-[11px] text-slate-500">Enter a from/to range for the morning, afternoon, or both. For a whole-day event, enter its start and end times.</p>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-indigo-700 mb-1">Set-up Date *</label>
+            <input type="date" id="ev_setup_date" required class="w-full rounded-lg border border-indigo-300 bg-indigo-50/40 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div class="sm:col-span-2 lg:col-span-2">
+            <label class="block text-xs font-semibold text-indigo-700 mb-1">Set-up Time *</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <fieldset class="rounded-lg border border-indigo-200 bg-indigo-50/30 p-3">
+                <legend class="px-1 text-xs font-semibold text-indigo-700">Morning</legend>
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="text-xs text-slate-600">From<input type="time" id="ev_setup_morning_from" class="mt-1 w-full rounded-lg border border-indigo-300 px-2 py-2 text-sm" /></label>
+                  <label class="text-xs text-slate-600">To<input type="time" id="ev_setup_morning_to" class="mt-1 w-full rounded-lg border border-indigo-300 px-2 py-2 text-sm" /></label>
+                </div>
+              </fieldset>
+              <fieldset class="rounded-lg border border-indigo-200 bg-indigo-50/30 p-3">
+                <legend class="px-1 text-xs font-semibold text-indigo-700">Afternoon</legend>
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="text-xs text-slate-600">From<input type="time" id="ev_setup_afternoon_from" class="mt-1 w-full rounded-lg border border-indigo-300 px-2 py-2 text-sm" /></label>
+                  <label class="text-xs text-slate-600">To<input type="time" id="ev_setup_afternoon_to" class="mt-1 w-full rounded-lg border border-indigo-300 px-2 py-2 text-sm" /></label>
+                </div>
+              </fieldset>
+            </div>
+            <p class="mt-1 text-[11px] text-slate-500">Enter a from/to range for the morning, afternoon, or both.</p>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Arrangements (Chairs, Sound System, Projector, Catering, etc.)</label>
+            <textarea id="ev_arrangements" rows="1" placeholder="e.g., 60 monoblock chairs, 2 wireless mics, projector, bottled water" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]"></textarea>
+          </div>
+          <div class="sm:col-span-2 lg:col-span-4 flex justify-end">
+            <button type="submit" class="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold py-2 px-5 rounded-lg text-sm transition shadow-sm cursor-pointer">
+              + Schedule Event
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Events Table Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-bold text-[#1e3a8a]">Event Monitoring Schedule</h2>
+            <p class="text-xs text-slate-500">Click any event's status badge to cycle between Upcoming, Set-up Ready, and Completed.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="eventSearchInput" oninput="renderEvents()" placeholder="Search event, venue, arrangements..." class="w-full sm:w-64 rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+            <select id="eventStatusFilter" onchange="renderEvents()" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#2563eb]">
+              <option value="ALL">All Events</option>
+              <option value="ACTIVE">Upcoming & Set-up Ready</option>
+              <option value="Completed">Completed Only</option>
+            </select>
+            <button onclick="exportEventsCSV()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer">
+              Export CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 overflow-x-auto table-scroll rounded-lg border border-slate-200">
+          <table class="min-w-full divide-y divide-slate-200 text-sm">
+            <thead class="bg-slate-50 text-slate-700 text-xs uppercase font-bold">
+              <tr>
+                <th class="px-3.5 py-3 text-left whitespace-nowrap">Date of Event</th>
+                <th class="px-3.5 py-3 text-left">Name of Event</th>
+                <th class="px-3.5 py-3 text-left">Place</th>
+                <th class="px-3.5 py-3 text-left whitespace-nowrap">Time of Event</th>
+                <th class="px-3.5 py-3 text-left whitespace-nowrap">Set-up Date & Time</th>
+                <th class="px-3.5 py-3 text-left">Arrangements</th>
+                <th class="px-3.5 py-3 text-center whitespace-nowrap">Status</th>
+                <th class="px-3.5 py-3 text-right whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="eventsTableBody" class="divide-y divide-slate-200 bg-white">
+              <tr><td colspan="8" class="px-4 py-8 text-center text-slate-400">Loading events...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 3: CHECKLIST MONITORING SYSTEM                        -->
+    <!-- ============================================================ -->
+    <div id="module-checklists" class="module-panel hidden space-y-6 animate-fade-in">
+      <!-- Add Department Checklist Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-6">
+        <div class="pb-4 border-b border-slate-100">
+          <h2 class="text-lg font-bold text-[#1e3a8a]">Add Department Checklist & Monthly Inventory Record</h2>
+          <p class="text-xs text-slate-500">Monitor Restroom Checklist, Classroom Checklist, Monthly Inventory, and Checking of Documents per department.</p>
+        </div>
+
+        <form id="addChecklistForm" onsubmit="handleAddChecklist(event)" class="mt-4 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Name of Dept. *</label>
+              <input type="text" id="chk_dept_name" list="deptSuggestions" required placeholder="e.g., Science Department" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+              <datalist id="deptSuggestions">
+                <option value="Admin Office"></option>
+                <option value="HR Department"></option>
+                <option value="Finance / Accounting"></option>
+                <option value="Science Department"></option>
+                <option value="IT Department"></option>
+                <option value="Library"></option>
+                <option value="Registrar"></option>
+                <option value="Maintenance & Facilities"></option>
+              </datalist>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Month *</label>
+              <input type="month" id="chk_month" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Remarks / Verified By</label>
+              <input type="text" id="chk_remarks" placeholder="e.g., Inspected by M. Santos" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100">
+            <div class="flex flex-wrap items-center gap-4">
+              <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                <input type="checkbox" id="chk_restroom" class="w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb]" />
+                <span>Restroom Checklist</span>
+              </label>
+              <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                <input type="checkbox" id="chk_classroom" class="w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb]" />
+                <span>Classroom Checklist</span>
+              </label>
+              <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                <input type="checkbox" id="chk_monthly_inv" class="w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb]" />
+                <span>Monthly Inventory</span>
+              </label>
+              <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-sm font-semibold text-[#1e3a8a] cursor-pointer">
+                <input type="checkbox" id="chk_documents" class="w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb]" />
+                <span>Checking of Documents</span>
+              </label>
+            </div>
+            <button type="submit" class="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold py-2 px-5 rounded-lg text-sm transition shadow-sm cursor-pointer">
+              + Save Checklist Record
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Checklist Table Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-bold text-[#1e3a8a]">Department Checklist & Document Verification Log</h2>
+            <p class="text-xs text-slate-500">Toggle any checkbox directly in the table to save updates across office computers immediately.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="checklistSearchInput" oninput="renderChecklists()" placeholder="Search department or remarks..." class="w-full sm:w-56 rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+            <select id="checklistMonthFilter" onchange="renderChecklists()" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#2563eb]">
+              <option value="ALL">All Months</option>
+            </select>
+            <button onclick="exportChecklistsCSV()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer">
+              Export CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 overflow-x-auto table-scroll rounded-lg border border-slate-200">
+          <table class="min-w-full divide-y divide-slate-200 text-sm">
+            <thead class="bg-slate-50 text-slate-700 text-xs uppercase font-bold">
+              <tr>
+                <th class="px-3.5 py-3 text-left">Name of Dept.</th>
+                <th class="px-3.5 py-3 text-left whitespace-nowrap">Month</th>
+                <th class="px-3.5 py-3 text-center whitespace-nowrap">Restroom Checklist</th>
+                <th class="px-3.5 py-3 text-center whitespace-nowrap">Classroom Checklist</th>
+                <th class="px-3.5 py-3 text-center whitespace-nowrap">Monthly Inventory</th>
+                <th class="px-3.5 py-3 text-center whitespace-nowrap">Checking of Documents</th>
+                <th class="px-3.5 py-3 text-left">Remarks</th>
+                <th class="px-3.5 py-3 text-right whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="checklistsTableBody" class="divide-y divide-slate-200 bg-white">
+              <tr><td colspan="8" class="px-4 py-8 text-center text-slate-400">Loading checklists...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 4: JSA DTR MONITORING SYSTEM                          -->
+    <!-- ============================================================ -->
+    <div id="module-dtr" class="module-panel hidden space-y-6 animate-fade-in">
+      <!-- Log DTR Entry Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-bold text-[#1e3a8a]">Log JSA Co-Worker Daily Time Record (DTR)</h2>
+            <p class="text-xs text-slate-500">Automatically calculates work hours from Time-In and Time-Out, plus tracks Absent Forms passed.</p>
+          </div>
+          <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer">
+            <input type="checkbox" id="dtr_deduct_lunch" onchange="autoCalculateDtrHours()" class="rounded text-[#2563eb] focus:ring-[#2563eb]" />
+            <span>Deduct 1-hr Lunch Break (if &gt; 5 hrs)</span>
+          </label>
+        </div>
+
+        <form id="addDtrForm" onsubmit="handleAddDtr(event)" class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Date *</label>
+            <input type="date" id="dtr_date" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">JSA Co-Worker Name *</label>
+            <input type="text" id="dtr_employee_name" list="jsaNamesDatalist" required placeholder="Full Name" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+            <datalist id="jsaNamesDatalist"></datalist>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Time-In</label>
+            <input type="time" id="dtr_time_in" oninput="autoCalculateDtrHours()" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Time-Out</label>
+            <input type="time" id="dtr_time_out" oninput="autoCalculateDtrHours()" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#1e3a8a] mb-1">Number of Hours *</label>
+            <input type="number" step="0.01" min="0" max="24" id="dtr_hours" value="0.00" required class="w-full rounded-lg border border-blue-300 bg-blue-50/40 px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Status *</label>
+            <select id="dtr_status" onchange="handleDtrStatusChange()" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#2563eb]">
+              <option value="Present">Present</option>
+              <option value="Late">Late</option>
+              <option value="Half-Day">Half-Day</option>
+              <option value="Absent">Absent</option>
+              <option value="On Leave">On Leave</option>
+            </select>
+          </div>
+          <div class="flex items-center pt-5">
+            <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="dtr_absent_form" class="w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb]" />
+              <span>Absent Form Passed</span>
+            </label>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Remarks / DTR Notes</label>
+            <input type="text" id="dtr_remarks" placeholder="e.g., Overtime, Sick Leave, Undertime" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+          </div>
+          <div class="sm:col-span-2 lg:col-span-4 flex justify-end">
+            <button type="submit" class="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold py-2 px-5 rounded-lg text-sm transition shadow-sm cursor-pointer">
+              + Save DTR Entry
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- JSA Summary Strip Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <h3 class="text-base font-bold text-[#1e3a8a]">JSA Co-Worker Attendance & Hours Summary</h3>
+            <p class="text-xs text-slate-500">Filter by co-worker or month to view total days present, hours worked, absences, and absent forms passed.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="dtrEmployeeFilter" onchange="renderDtr()" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#2563eb]">
+              <option value="ALL">All JSA Co-Workers</option>
+            </select>
+            <select id="dtrMonthFilter" onchange="renderDtr()" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#2563eb]">
+              <option value="ALL">All Months</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="text-xs font-semibold text-slate-500">Total Days Present</div>
+            <div id="sumDtrDaysPresent" class="text-xl font-extrabold text-emerald-700 mt-1">0 days</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200">
+            <div class="text-xs font-semibold text-blue-800">Total Hours Worked</div>
+            <div id="sumDtrTotalHours" class="text-xl font-extrabold text-[#1e3a8a] mt-1">0.00 hrs</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-rose-50/70 border border-rose-200">
+            <div class="text-xs font-semibold text-rose-800">Absences / On Leave</div>
+            <div id="sumDtrAbsences" class="text-xl font-extrabold text-rose-700 mt-1">0 days</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200">
+            <div class="text-xs font-semibold text-amber-800">Absent Forms Passed</div>
+            <div id="sumDtrAbsentForms" class="text-xl font-extrabold text-amber-700 mt-1">0 passed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DTR Log Table Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-bold text-[#1e3a8a]">JSA Daily Time Record (DTR) Logs</h2>
+            <p class="text-xs text-slate-500" id="dtrShowingInfo">Showing 0 logs</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="dtrSearchInput" oninput="renderDtr()" placeholder="Search name, date, remarks..." class="w-full sm:w-56 rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+            <button onclick="exportDtrCSV()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer">
+              Export CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 overflow-x-auto table-scroll rounded-lg border border-slate-200">
+          <table class="min-w-full divide-y divide-slate-200 text-sm">
+            <thead class="bg-slate-50 text-slate-700 text-xs uppercase font-bold">
+              <tr>
+                <th class="px-3.5 py-3 text-left whitespace-nowrap">Date</th>
+                <th class="px-3.5 py-3 text-left">JSA Co-Worker Name</th>
+                <th class="px-3.5 py-3 text-center whitespace-nowrap">Time-In</th>
+                <th class="px-3.5 py-3 text-center whitespace-nowrap">Time-Out</th>
+                <th class="px-3.5 py-3 text-right whitespace-nowrap">No. of Hours</th>
+                <th class="px-3.5 py-3 text-center whitespace-nowrap">Status</th>
+                <th class="px-3.5 py-3 text-center whitespace-nowrap">Absent Form Passed</th>
+                <th class="px-3.5 py-3 text-left">Remarks</th>
+                <th class="px-3.5 py-3 text-right whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="dtrTableBody" class="divide-y divide-slate-200 bg-white">
+              <tr><td colspan="9" class="px-4 py-8 text-center text-slate-400">Loading JSA DTR records...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+      <span>Buildings Upkeep Maintenance Portal • Multi-PC Shared Workspace</span>
+      <span id="footerTerminalId" class="font-mono text-slate-400">Terminal ID: initializing...</span>
+    </div>
+  </footer>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 1: QUICK STOCK ADJUSTMENT (+CREDIT / -DEBIT)           -->
+  <!-- ============================================================ -->
+  <div id="adjustStockModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6 animate-fade-in">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-lg font-bold text-[#1e3a8a]">Adjust Supply Stock (+Credit / -Debit)</h3>
+        <button onclick="closeModal('adjustStockModal')" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <form onsubmit="submitAdjustStock(event)" class="mt-4 space-y-4">
+        <input type="hidden" id="adj_supply_id" />
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="text-xs text-slate-500">Supply Item</div>
+          <div id="adj_supply_name" class="text-base font-bold text-slate-900">—</div>
+          <div class="mt-1 text-xs text-slate-600">Current Total Left: <span id="adj_current_total" class="font-extrabold text-[#2563eb]">0</span> units</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-emerald-700 mb-1">Credit (+ Added)</label>
+            <input type="number" id="adj_credit" value="0" min="0" oninput="updateAdjustPreview()" class="w-full rounded-lg border border-emerald-300 bg-emerald-50/40 px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-rose-700 mb-1">Debit (- Used/Out)</label>
+            <input type="number" id="adj_debit" value="0" min="0" oninput="updateAdjustPreview()" class="w-full rounded-lg border border-rose-300 bg-rose-50/40 px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">New Date Received (Optional if adding stock)</label>
+          <input type="date" id="adj_date_received" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563eb]" />
+        </div>
+
+        <div class="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
+          <span class="text-xs font-semibold text-[#1e3a8a]">New Remaining Total Left:</span>
+          <span id="adj_new_total_preview" class="text-lg font-extrabold text-[#2563eb]">0</span>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('adjustStockModal')" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-sm font-semibold text-white cursor-pointer">Update Stock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 2: EDIT RECORD MODAL (DYNAMIC FOR ALL 4 MODULES)       -->
+  <!-- ============================================================ -->
+  <div id="editRecordModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full p-6 animate-fade-in">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 id="editModalTitle" class="text-lg font-bold text-[#1e3a8a]">Edit Record</h3>
+        <button onclick="closeModal('editRecordModal')" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <form id="editModalForm" onsubmit="submitEditModal(event)" class="mt-4 space-y-4">
+        <div id="editModalFields" class="space-y-3"></div>
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeModal('editRecordModal')" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-sm font-semibold text-white cursor-pointer">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 3: CUSTOM CONFIRMATION MODAL (NO NATIVE confirm())     -->
+  <!-- ============================================================ -->
+  <div id="confirmModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-sm w-full p-6 animate-fade-in">
+      <div class="flex items-center gap-3 text-rose-600">
+        <div class="p-2 rounded-full bg-rose-100">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h3 id="confirmModalTitle" class="text-base font-bold text-slate-900">Confirm Deletion</h3>
+      </div>
+      <p id="confirmModalMessage" class="mt-3 text-sm text-slate-600">Are you sure you want to remove this record?</p>
+      <div class="mt-5 flex justify-end gap-2">
+        <button onclick="closeModal('confirmModal')" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Cancel</button>
+        <button id="confirmModalActionBtn" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-sm font-semibold text-white cursor-pointer">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION CONTAINER ==================== -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ==================== APPLICATION LOGIC & FIREBASE SYNC ==================== -->
+
+  <script type="module" src="bumd.js"></script>
+</body>
+</html>
