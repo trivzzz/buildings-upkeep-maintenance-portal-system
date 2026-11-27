@@ -117,6 +117,23 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
       });
     };
 
+    window.toggleEventSetupFields = function(prefix) {
+      const includeSetup = document.getElementById(`${prefix}_include_setup`).checked;
+      const dateFields = document.getElementById(`${prefix}_setup_date_fields`);
+      const timeFields = document.getElementById(`${prefix}_setup_time_fields`);
+      const dateInput = document.getElementById(`${prefix}_setup_date`);
+
+      dateFields.classList.toggle('hidden', !includeSetup);
+      timeFields.classList.toggle('hidden', !includeSetup);
+      dateInput.disabled = !includeSetup;
+      dateInput.required = includeSetup;
+      timeFields.querySelectorAll('input[type="time"]').forEach(input => {
+        input.disabled = !includeSetup;
+        if (!includeSetup) input.value = '';
+      });
+      if (!includeSetup) dateInput.value = '';
+    };
+
     function renderTimePeriodFields(prefix, group, record, color) {
       const tone = color === 'indigo'
         ? { border: 'border-indigo-200 bg-indigo-50/30', label: 'text-indigo-700', input: 'border-indigo-300' }
@@ -524,8 +541,11 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
       const eventPeriods = readTimePeriods('ev', 'event');
       const event_day_from = document.getElementById('ev_event_day_from').value;
       const event_day_to = document.getElementById('ev_event_day_to').value;
-      const setup_date = document.getElementById('ev_setup_date').value;
-      const setupPeriods = readTimePeriods('ev', 'setup');
+      const include_setup = document.getElementById('ev_include_setup').checked;
+      const setup_date = include_setup ? document.getElementById('ev_setup_date').value : '';
+      const setupPeriods = include_setup
+        ? readTimePeriods('ev', 'setup')
+        : { setup_morning_from: '', setup_morning_to: '', setup_afternoon_from: '', setup_afternoon_to: '' };
       const arrangements = document.getElementById('ev_arrangements').value.trim();
 
       const eventHasTimes = Object.values(eventPeriods).some(Boolean);
@@ -534,7 +554,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
           ? 'Whole Day cannot be combined with morning or afternoon time ranges.'
           : validateTimeRange(event_day_from, event_day_to, 'Whole-day event', true))
         : validateTimePeriods(eventPeriods, 'event', 'Event', true);
-      const setupTimeError = validateTimePeriods(setupPeriods, 'setup', 'Set-up', true);
+      const setupTimeError = include_setup ? validateTimePeriods(setupPeriods, 'setup', 'Set-up', true) : '';
       if (eventTimeError || setupTimeError) {
         showToast(eventTimeError || setupTimeError, 'error');
         return;
@@ -551,7 +571,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
           event_day_to: event_whole_day ? event_day_to : '',
           ...eventPeriods,
           setup_date,
-          setup_time: setupPeriods.setup_morning_from || setupPeriods.setup_afternoon_from,
+          setup_time: include_setup ? setupPeriods.setup_morning_from || setupPeriods.setup_afternoon_from : '',
           ...setupPeriods,
           arrangements,
           status: 'Upcoming'
@@ -609,6 +629,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
         } else if (ev.status === 'Completed') {
           statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Completed</span>`;
         }
+        const hasSetupDetails = Boolean(
+          ev.setup_date || ev.setup_time ||
+          ev.setup_morning_from || ev.setup_morning_to ||
+          ev.setup_afternoon_from || ev.setup_afternoon_to
+        );
+        const setupDetails = hasSetupDetails
+          ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200">${escapeHtml(ev.setup_date || '—')} • ${escapeHtml(formatTimePeriods(ev, 'setup'))}</span>`
+          : '<span class="text-slate-400">No set-up</span>';
 
         return `
           <tr class="hover:bg-slate-50/90 transition">
@@ -616,11 +644,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
             <td class="px-3.5 py-3 font-bold text-slate-900">${escapeHtml(ev.event_name)}</td>
             <td class="px-3.5 py-3 text-slate-700">${escapeHtml(ev.place)}</td>
             <td class="px-3.5 py-3 whitespace-nowrap font-medium text-slate-800">${escapeHtml(formatTimePeriods(ev, 'event'))}</td>
-            <td class="px-3.5 py-3 whitespace-nowrap">
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200">
-                ${escapeHtml(ev.setup_date)} • ${escapeHtml(formatTimePeriods(ev, 'setup'))}
-              </span>
-            </td>
+            <td class="px-3.5 py-3 whitespace-nowrap">${setupDetails}</td>
             <td class="px-3.5 py-3 text-xs text-slate-600 max-w-xs">${escapeHtml(ev.arrangements || '—')}</td>
             <td class="px-3.5 py-3 text-center whitespace-nowrap">
               <button onclick="cycleEventStatus('${ev.id}')" title="Click to toggle status" class="cursor-pointer hover:opacity-85 transition">
@@ -647,7 +671,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
       const month_year = document.getElementById('chk_month').value;
       const restroom_checked = document.getElementById('chk_restroom').checked;
       const classroom_checked = document.getElementById('chk_classroom').checked;
-      const monthly_inv_checked = document.getElementById('chk_monthly_inv').checked;
+      const restroom_monthly_inv_checked = document.getElementById('chk_restroom_monthly_inv').checked;
+      const classroom_monthly_inv_checked = document.getElementById('chk_classroom_monthly_inv').checked;
       const documents_checked = document.getElementById('chk_documents').checked;
       const remarks = document.getElementById('chk_remarks').value.trim();
 
@@ -657,7 +682,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
           month_year,
           restroom_checked,
           classroom_checked,
-          monthly_inv_checked,
+          restroom_monthly_inv_checked,
+          classroom_monthly_inv_checked,
           documents_checked,
           remarks
         });
@@ -665,7 +691,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
         document.getElementById('chk_remarks').value = '';
         document.getElementById('chk_restroom').checked = false;
         document.getElementById('chk_classroom').checked = false;
-        document.getElementById('chk_monthly_inv').checked = false;
+        document.getElementById('chk_restroom_monthly_inv').checked = false;
+        document.getElementById('chk_classroom_monthly_inv').checked = false;
         document.getElementById('chk_documents').checked = false;
         showToast(`Checklist saved for ${dept_name}`);
       } catch (err) {
@@ -674,15 +701,24 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
       }
     };
 
-    window.toggleChecklistField = async function(id, field, value) {
-      try {
-        await updateRecord('office_checklists', 'checklists', id, { [field]: value });
-        showToast('Checklist status updated!');
-      } catch (err) {
-        console.error(err);
-        showToast('Failed to update checkbox.', 'error');
-      }
-    };
+    function isRestroomMonthlyInventoryChecked(checklist) {
+      return checklist.restroom_monthly_inv_checked ?? checklist.monthly_inv_checked ?? false;
+    }
+
+    function isClassroomMonthlyInventoryChecked(checklist) {
+      return checklist.classroom_monthly_inv_checked ?? checklist.monthly_inv_checked ?? false;
+    }
+
+    function renderChecklistStatus(checked, label, color = 'blue') {
+      const checkedColor = color === 'green'
+        ? 'bg-emerald-600 border-emerald-600'
+        : 'bg-[#2563eb] border-[#2563eb]';
+      const statusColor = checked ? checkedColor : 'bg-white border-slate-300';
+      const checkmark = checked
+        ? '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 8 3.2 3.2L13 4.5" /></svg>'
+        : '';
+      return `<span role="img" aria-label="${escapeHtml(label)}: ${checked ? 'Complete' : 'Incomplete'}" class="inline-flex h-4 w-4 items-center justify-center rounded border ${statusColor} ${checked ? 'text-white' : 'text-transparent'}">${checkmark}</span>`;
+    }
 
     window.renderChecklists = function() {
       // Populate month filter
@@ -709,7 +745,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 
       const tbody = document.getElementById('checklistsTableBody');
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-slate-400">No checklist records found. Add a department checklist above.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="px-4 py-8 text-center text-slate-400">No checklist records found. Add a department checklist above.</td></tr>`;
         return;
       }
 
@@ -723,19 +759,22 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
             <td class="px-3.5 py-3 font-bold text-slate-900">${escapeHtml(chk.dept_name)}</td>
             <td class="px-3.5 py-3 whitespace-nowrap font-medium text-slate-700">${escapeHtml(chk.month_year)}</td>
             <td class="px-3.5 py-3 text-center">
-              <input type="checkbox" ${chk.restroom_checked ? 'checked' : ''} onchange="toggleChecklistField('${chk.id}', 'restroom_checked', this.checked)" class="w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb] cursor-pointer" />
+              ${renderChecklistStatus(chk.restroom_checked, 'Restroom checklist')}
             </td>
             <td class="px-3.5 py-3 text-center">
-              <input type="checkbox" ${chk.classroom_checked ? 'checked' : ''} onchange="toggleChecklistField('${chk.id}', 'classroom_checked', this.checked)" class="w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb] cursor-pointer" />
+              ${renderChecklistStatus(chk.classroom_checked, 'Classroom checklist')}
             </td>
             <td class="px-3.5 py-3 text-center">
-              <input type="checkbox" ${chk.monthly_inv_checked ? 'checked' : ''} onchange="toggleChecklistField('${chk.id}', 'monthly_inv_checked', this.checked)" class="w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb] cursor-pointer" />
+              ${renderChecklistStatus(isRestroomMonthlyInventoryChecked(chk), 'Restroom monthly inventory')}
+            </td>
+            <td class="px-3.5 py-3 text-center">
+              ${renderChecklistStatus(isClassroomMonthlyInventoryChecked(chk), 'Classroom monthly inventory')}
             </td>
             <td class="px-3.5 py-3 text-center whitespace-nowrap">
-              <label class="inline-flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" ${chk.documents_checked ? 'checked' : ''} onchange="toggleChecklistField('${chk.id}', 'documents_checked', this.checked)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
+              <span class="inline-flex items-center gap-2">
+                ${renderChecklistStatus(chk.documents_checked, 'Document check', 'green')}
                 ${docBadge}
-              </label>
+              </span>
             </td>
             <td class="px-3.5 py-3 text-xs text-slate-600">${escapeHtml(chk.remarks || '—')}</td>
             <td class="px-3.5 py-3 text-right whitespace-nowrap space-x-1">
@@ -960,6 +999,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
         titleEl.textContent = 'Edit Event Schedule';
         const eventHasStructuredTime = item.event_whole_day || item.event_morning_from || item.event_morning_to || item.event_afternoon_from || item.event_afternoon_to;
         const setupHasStructuredTime = item.setup_morning_from || item.setup_morning_to || item.setup_afternoon_from || item.setup_afternoon_to;
+        const hasSetupDetails = Boolean(item.setup_date || item.setup_time || setupHasStructuredTime);
         const legacyEventTime = item.event_whole_day && !item.event_day_from && !item.event_day_to
           ? '<p class="mt-1 text-[11px] text-slate-500">Add the whole-day start and end times.</p>'
           : !eventHasStructuredTime && item.event_time
@@ -1002,16 +1042,22 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
             <input type="text" id="ed_event_name" value="${escapeHtml(item.event_name)}" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Place / Venue</label>
-            <input type="text" id="ed_place" value="${escapeHtml(item.place)}" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Place / Venue / Building</label>
+            <input type="text" id="ed_place" list="buildingSuggestions" value="${escapeHtml(item.place)}" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           </div>
           <div class="grid grid-cols-1 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-indigo-700 mb-1">Set-up Date</label>
-              <input type="date" id="ed_setup_date" value="${escapeHtml(item.setup_date)}" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              <label class="inline-flex items-center gap-2 text-xs font-semibold text-indigo-700 cursor-pointer">
+                <input type="checkbox" id="ed_include_setup" ${hasSetupDetails ? 'checked' : ''} onchange="toggleEventSetupFields('ed')" class="rounded text-[#2563eb]" />
+                Include set-up details
+              </label>
+              <div id="ed_setup_date_fields" class="${hasSetupDetails ? '' : 'hidden'} mt-2">
+                <label class="block text-xs font-semibold text-indigo-700 mb-1">Set-up Date *</label>
+                <input type="date" id="ed_setup_date" value="${escapeHtml(item.setup_date || '')}" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              </div>
             </div>
-            <div>
-              <label class="block text-xs font-semibold text-indigo-700 mb-1">Set-up Time</label>
+            <div id="ed_setup_time_fields" class="${hasSetupDetails ? '' : 'hidden'}">
+              <label class="block text-xs font-semibold text-indigo-700 mb-1">Set-up Time *</label>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                 ${renderTimePeriodFields('ed', 'setup', item, 'indigo')}
               </div>
@@ -1023,13 +1069,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
             <textarea id="ed_arrangements" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">${escapeHtml(item.arrangements || '')}</textarea>
           </div>
         `;
+        window.toggleEventSetupFields('ed');
       } else if (moduleKey === 'checklists') {
-        titleEl.textContent = 'Edit Department Checklist';
+        titleEl.textContent = 'Edit Building Checklist';
         fieldsDiv.innerHTML = `
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">Name of Dept.</label>
-              <input type="text" id="ed_dept_name" value="${escapeHtml(item.dept_name)}" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Name of Building</label>
+              <input type="text" id="ed_dept_name" list="buildingSuggestions" value="${escapeHtml(item.dept_name)}" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Month</label>
@@ -1046,8 +1093,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
               <span>Classroom Checklist</span>
             </label>
             <label class="inline-flex items-center gap-2 text-sm">
-              <input type="checkbox" id="ed_monthly_inv" ${item.monthly_inv_checked ? 'checked' : ''} class="rounded text-[#2563eb]" />
-              <span>Monthly Inventory</span>
+              <input type="checkbox" id="ed_restroom_monthly_inv" ${isRestroomMonthlyInventoryChecked(item) ? 'checked' : ''} class="rounded text-[#2563eb]" />
+              <span>Restroom Monthly Inventory</span>
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm">
+              <input type="checkbox" id="ed_classroom_monthly_inv" ${isClassroomMonthlyInventoryChecked(item) ? 'checked' : ''} class="rounded text-[#2563eb]" />
+              <span>Classroom Monthly Inventory</span>
             </label>
             <label class="inline-flex items-center gap-2 text-sm font-semibold text-[#1e3a8a]">
               <input type="checkbox" id="ed_documents" ${item.documents_checked ? 'checked' : ''} class="rounded text-[#2563eb]" />
@@ -1055,7 +1106,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
             </label>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Remarks</label>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Remarks / Checked By</label>
             <input type="text" id="ed_remarks" value="${escapeHtml(item.remarks || '')}" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           </div>
         `;
@@ -1135,10 +1186,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
         } else if (moduleKey === 'events') {
           const currentEvent = state.events.find(item => item.id === id);
           const event_whole_day = document.getElementById('ed_event_whole_day').checked;
+          const include_setup = document.getElementById('ed_include_setup').checked;
           let eventPeriods = readTimePeriods('ed', 'event');
           const event_day_from = document.getElementById('ed_event_day_from').value;
           const event_day_to = document.getElementById('ed_event_day_to').value;
-          let setupPeriods = readTimePeriods('ed', 'setup');
+          let setupPeriods = include_setup
+            ? readTimePeriods('ed', 'setup')
+            : { setup_morning_from: '', setup_morning_to: '', setup_afternoon_from: '', setup_afternoon_to: '' };
           const eventHasTimes = Object.values(eventPeriods).some(Boolean);
           const setupHasTimes = Object.values(setupPeriods).some(Boolean);
 
@@ -1149,7 +1203,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
           const eventTimeError = event_whole_day
             ? validateTimeRange(event_day_from, event_day_to, 'Whole-day event', true)
             : validateTimePeriods(eventPeriods, 'event', 'Event', false);
-          const setupTimeError = validateTimePeriods(setupPeriods, 'setup', 'Set-up', false);
+          const setupTimeError = include_setup ? validateTimePeriods(setupPeriods, 'setup', 'Set-up', false) : '';
           if (eventTimeError || setupTimeError) {
             showToast(eventTimeError || setupTimeError, 'error');
             return;
@@ -1172,12 +1226,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
             showToast('Enter an event time period or choose Whole Day.', 'error');
             return;
           }
-          if (!setupHasTimes && currentSetupHasTime) {
+          if (include_setup && !setupHasTimes && currentSetupHasTime) {
             setupPeriods = Object.fromEntries(
               ['setup_morning_from', 'setup_morning_to', 'setup_afternoon_from', 'setup_afternoon_to']
                 .map(key => [key, currentEvent[key] || ''])
             );
-          } else if (!setupHasTimes) {
+          } else if (include_setup && !setupHasTimes) {
             showToast('Enter at least one set-up time period.', 'error');
             return;
           }
@@ -1191,8 +1245,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
             ...eventPeriods,
             event_name: document.getElementById('ed_event_name').value.trim(),
             place: document.getElementById('ed_place').value.trim(),
-            setup_date: document.getElementById('ed_setup_date').value,
-            setup_time: setupPeriods.setup_morning_from || setupPeriods.setup_afternoon_from || (currentEvent && currentEvent.setup_time) || '',
+            setup_date: include_setup ? document.getElementById('ed_setup_date').value : '',
+            setup_time: include_setup ? setupPeriods.setup_morning_from || setupPeriods.setup_afternoon_from || (currentEvent && currentEvent.setup_time) || '' : '',
             ...setupPeriods,
             arrangements: document.getElementById('ed_arrangements').value.trim()
           });
@@ -1202,7 +1256,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
             month_year: document.getElementById('ed_month_year').value,
             restroom_checked: document.getElementById('ed_restroom').checked,
             classroom_checked: document.getElementById('ed_classroom').checked,
-            monthly_inv_checked: document.getElementById('ed_monthly_inv').checked,
+            restroom_monthly_inv_checked: document.getElementById('ed_restroom_monthly_inv').checked,
+            classroom_monthly_inv_checked: document.getElementById('ed_classroom_monthly_inv').checked,
             documents_checked: document.getElementById('ed_documents').checked,
             remarks: document.getElementById('ed_remarks').value.trim()
           });
@@ -1341,12 +1396,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
     };
 
     window.exportChecklistsCSV = function() {
-      const headers = ['Name of Dept.', 'Month', 'Restroom Checklist', 'Classroom Checklist', 'Monthly Inventory', 'Checking of Documents', 'Remarks'];
+      const headers = ['Building', 'Month', 'Restroom Checklist', 'Classroom Checklist', 'Restroom Monthly Inventory', 'Classroom Monthly Inventory', 'Checking of Documents', 'Remarks / Checked By'];
       const rows = state.checklists.map(c => [
         c.dept_name, c.month_year,
         c.restroom_checked ? 'Checked' : 'Pending',
         c.classroom_checked ? 'Checked' : 'Pending',
-        c.monthly_inv_checked ? 'Checked' : 'Pending',
+        isRestroomMonthlyInventoryChecked(c) ? 'Checked' : 'Pending',
+        isClassroomMonthlyInventoryChecked(c) ? 'Checked' : 'Pending',
         c.documents_checked ? 'Checked' : 'Pending',
         c.remarks
       ]);
@@ -1378,8 +1434,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
         ...state.events.map(e => toCSVRow([e.event_date, e.event_name, e.place, formatTimePeriods(e, 'event'), e.setup_date, formatTimePeriods(e, 'setup'), e.arrangements, e.status])),
         '',
         '=== 3. CHECKLIST MONITORING ===',
-        toCSVRow(['Name of Dept.', 'Month', 'Restroom', 'Classroom', 'Monthly Inventory', 'Checking of Documents', 'Remarks']),
-        ...state.checklists.map(c => toCSVRow([c.dept_name, c.month_year, c.restroom_checked ? 'Yes' : 'No', c.classroom_checked ? 'Yes' : 'No', c.monthly_inv_checked ? 'Yes' : 'No', c.documents_checked ? 'Yes' : 'No', c.remarks])),
+        toCSVRow(['Building', 'Month', 'Restroom Checklist', 'Classroom Checklist', 'Restroom Monthly Inventory', 'Classroom Monthly Inventory', 'Checking of Documents', 'Remarks / Checked By']),
+        ...state.checklists.map(c => toCSVRow([c.dept_name, c.month_year, c.restroom_checked ? 'Yes' : 'No', c.classroom_checked ? 'Yes' : 'No', isRestroomMonthlyInventoryChecked(c) ? 'Yes' : 'No', isClassroomMonthlyInventoryChecked(c) ? 'Yes' : 'No', c.documents_checked ? 'Yes' : 'No', c.remarks])),
         '',
         '=== 4. JSA DTR MONITORING ===',
         toCSVRow(['Date', 'JSA Co-Worker Name', 'Time-In', 'Time-Out', 'Hours', 'Status', 'Absent Form Passed', 'Remarks']),
@@ -1420,9 +1476,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
       ];
 
       const sampleChecklists = [
-        { dept_name: 'Admin Office', month_year: month, restroom_checked: true, classroom_checked: true, monthly_inv_checked: true, documents_checked: true, remarks: 'All checklists verified and filed' },
-        { dept_name: 'Science Department', month_year: month, restroom_checked: true, classroom_checked: true, monthly_inv_checked: false, documents_checked: false, remarks: 'Awaiting lab monthly inventory sheet' },
-        { dept_name: 'IT Department', month_year: month, restroom_checked: true, classroom_checked: true, monthly_inv_checked: true, documents_checked: false, remarks: 'Pending supervisor signature on docs' }
+        { dept_name: 'Senior High School Building', month_year: month, restroom_checked: true, classroom_checked: true, restroom_monthly_inv_checked: true, classroom_monthly_inv_checked: true, documents_checked: true, remarks: 'All checklists verified and filed' },
+        { dept_name: 'Junior High School Building', month_year: month, restroom_checked: true, classroom_checked: true, restroom_monthly_inv_checked: false, classroom_monthly_inv_checked: false, documents_checked: false, remarks: 'Awaiting monthly inventory sheet' },
+        { dept_name: 'Elementary Building', month_year: month, restroom_checked: true, classroom_checked: true, restroom_monthly_inv_checked: true, classroom_monthly_inv_checked: false, documents_checked: false, remarks: 'Pending supervisor signature on documents' }
       ];
 
       const sampleDtr = [
